@@ -6,7 +6,7 @@ use rayon::prelude::*;
 struct Args {
     /// Run an exhaustive u32 test
     #[arg(short, long)]
-    test: bool
+    test: bool,
 }
 
 fn main() {
@@ -21,9 +21,14 @@ fn main() {
 fn test_ilog() {
     // h/t @steffahn for suggesting using rayon to parallelize. goes brrr.
     let start = std::time::Instant::now();
-    (1..=u32::MAX).into_par_iter().for_each(|x| assert_eq!(ilog10(x), x.ilog10()));
+    (1..=u32::MAX)
+        .into_par_iter()
+        .for_each(|x| assert_eq!(ilog10(x), x.ilog10()));
     let elapsed = start.elapsed();
-    println!("passed exhaustive u32 test in {:.2} seconds", elapsed.as_secs_f64());
+    println!(
+        "passed exhaustive u32 test in {:.2} seconds",
+        elapsed.as_secs_f64()
+    );
 }
 
 /// Reference version copied from Rust stdlib.
@@ -63,9 +68,7 @@ const fn ilogpopc(val_lz: u32) -> u32 {
     let guess = (LZ_GUESSMASK << val_lz).count_ones();
     if guess > LZ_GUESSMASK.count_ones() {
         // SAFETY: shifting never increases the count of ones
-        unsafe {
-            std::hint::unreachable_unchecked()
-        }
+        unsafe { std::hint::unreachable_unchecked() }
     }
     guess
 }
@@ -73,19 +76,25 @@ const fn ilogpopc(val_lz: u32) -> u32 {
 pub const fn ilog10_mul_or(x: u32) -> u32 {
     // set least significant 3 bits so numbers 0 to 6 all get the same treatment 7
     // changes nothing if x >= 7
-    let log2 = ((x|7) >> 1).ilog2();
+    let log2 = ((x | 7) >> 1).ilog2();
     debug_assert!(log2 < 31);
     // guess close enough for all u32
     let guess = log2.wrapping_mul(5) >> 4;
     debug_assert!(guess < 10);
     if guess >= 10 {
-        unsafe {
-            std::hint::unreachable_unchecked()
-        }
+        unsafe { std::hint::unreachable_unchecked() }
     }
     const TEN_THRESHOLDS: [u32; 10] = [
-        9, 99, 999, 9999, 99999, 
-        999999, 9999999, 99999999, 999_999_999, u32::MAX,
+        9,
+        99,
+        999,
+        9999,
+        99999,
+        999999,
+        9999999,
+        99999999,
+        999_999_999,
+        u32::MAX,
     ];
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (x > ttg) as u32
@@ -96,13 +105,19 @@ pub const fn ilog10_mul(x: u32) -> u32 {
     let guess = x.ilog2().wrapping_mul(9) >> 5;
     debug_assert!(guess < 10);
     if guess >= 10 {
-        unsafe {
-            std::hint::unreachable_unchecked()
-        }
+        unsafe { std::hint::unreachable_unchecked() }
     }
     const TEN_THRESHOLDS: [u32; 10] = [
-        9, 99, 999, 9999, 99999, 
-        999999, 9999999, 99999999, 999_999_999, u32::MAX,
+        9,
+        99,
+        999,
+        9999,
+        99999,
+        999999,
+        9999999,
+        99999999,
+        999_999_999,
+        u32::MAX,
     ];
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (x > ttg) as u32
@@ -111,20 +126,34 @@ pub const fn ilog10_mul(x: u32) -> u32 {
 pub fn ilog10_mul_alt(x: u32) -> u32 {
     let guess = (x.ilog2() * 9) >> 5;
     const TEN_THRESHOLDS: [u32; 10] = [
-        9, 99, 999, 9999, 99999, 
-        999999, 9999999, 99999999, 999_999_999, u32::MAX,
+        9,
+        99,
+        999,
+        9999,
+        99999,
+        999999,
+        9999999,
+        99999999,
+        999_999_999,
+        u32::MAX,
     ];
-    let ttg = unsafe { *TEN_THRESHOLDS.get_unchecked(guess as usize) }; 
+    let ttg = unsafe { *TEN_THRESHOLDS.get_unchecked(guess as usize) };
     guess + (x > ttg) as u32
 }
-
-
 
 const fn ilog10(val: u32) -> u32 {
     let guess = ilogpopc(val.leading_zeros());
     const TEN_THRESHOLDS: [u32; 10] = [
-        9, 99, 999, 9_999, 99_999, 999_999,
-        9_999_999, 99_999_999, 999_999_999, u32::MAX,
+        9,
+        99,
+        999,
+        9_999,
+        99_999,
+        999_999,
+        9_999_999,
+        99_999_999,
+        999_999_999,
+        u32::MAX,
     ];
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (val > ttg) as u32
@@ -132,19 +161,18 @@ const fn ilog10(val: u32) -> u32 {
 
 fn runloop<F>(f: &F) -> u128
 where
-	F: Fn(u32) -> u32,
+    F: Fn(u32) -> u32,
 {
     const LOOPS: usize = 1;
     const UPTO: u32 = u32::MAX;
     let start = std::time::Instant::now();
     for _ in 0..LOOPS {
-        for i in 1..=UPTO{
+        for i in 1..=UPTO {
             std::hint::black_box(f(i));
         }
     }
     start.elapsed().as_micros()
 }
-
 
 fn benchmark_ilog() {
     let elapsed_real = runloop(&ilog10_u32);
@@ -155,5 +183,3 @@ fn benchmark_ilog() {
     println!("|  |  {elapsed_popc} | {elapsed_mul} | {elapsed_real} |");
     println!("");
 }
-
-
