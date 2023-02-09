@@ -122,18 +122,6 @@ pub fn ilog10_mul_alt(x: u32) -> u32 {
 
 const fn ilog10(val: u32) -> u32 {
     let guess = ilogpopc(val.leading_zeros());
-    const TEN_THRESHOLDS: [u32; 10] = [
-        9,
-        99,
-        999,
-        9_999,
-        99_999,
-        999_999,
-        9_999_999,
-        99_999_999,
-        999_999_999,
-        u32::MAX,
-    ];
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (val > ttg) as u32
 }
