@@ -145,13 +145,14 @@ where
     start.elapsed().as_micros()
 }
 
+
 fn benchmark_ilog() {
     let elapsed_real = runloop(&ilog10_u32);
     let elapsed_popc = runloop(&ilog10);
     let elapsed_mul = runloop(&ilog10_mul);
     println!("|Platform | popcount | mul | stdlib |");
     println!("|---------|----------|-----|--------|");
-    println!("|   |  {elapsed_popc} | {elapsed_mul} | {elapsed_real} |");
+    println!("|  |  {elapsed_popc} | {elapsed_mul} | {elapsed_real} |");
     println!("");
 }
 
