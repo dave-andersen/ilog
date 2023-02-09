@@ -70,13 +70,30 @@ const fn ilogpopc(val_lz: u32) -> u32 {
     guess
 }
 
-pub const fn ilog10_mul(x: u32) -> u32 {
+pub const fn ilog10_mul_or(x: u32) -> u32 {
     // set least significant 3 bits so numbers 0 to 6 all get the same treatment 7
     // changes nothing if x >= 7
     let log2 = ((x|7) >> 1).ilog2();
     debug_assert!(log2 < 31);
     // guess close enough for all u32
     let guess = log2.wrapping_mul(5) >> 4;
+    debug_assert!(guess < 10);
+    if guess >= 10 {
+        unsafe {
+            std::hint::unreachable_unchecked()
+        }
+    }
+    const TEN_THRESHOLDS: [u32; 10] = [
+        9, 99, 999, 9999, 99999, 
+        999999, 9999999, 99999999, 999_999_999, u32::MAX,
+    ];
+    let ttg = TEN_THRESHOLDS[guess as usize];
+    guess + (x > ttg) as u32
+}
+
+pub const fn ilog10_mul(x: u32) -> u32 {
+    // hacker's delight version
+    let guess = x.ilog2().wrapping_mul(9) >> 5;
     debug_assert!(guess < 10);
     if guess >= 10 {
         unsafe {
