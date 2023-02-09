@@ -76,6 +76,7 @@ const TEN_THRESHOLDS: [u32; 10] = [
 u32::MAX,
 ];
 
+// dave's popcount version that only works really well on AMD EPYC. :)
 #[inline]
 const fn ilogpopc(val_lz: u32) -> u32 {
     const LZ_GUESSMASK: u32 = 0b01001001000100100100010010010000;
@@ -87,6 +88,14 @@ const fn ilogpopc(val_lz: u32) -> u32 {
     guess
 }
 
+const fn ilog10(val: u32) -> u32 {
+    let guess = ilogpopc(val.leading_zeros());
+    let ttg = TEN_THRESHOLDS[guess as usize];
+    guess + (val > ttg) as u32
+}
+
+
+// version from quaternic on the rust forum
 pub const fn ilog10_mul_or(x: u32) -> u32 {
     // set least significant 3 bits so numbers 0 to 6 all get the same treatment 7
     // changes nothing if x >= 7
@@ -103,8 +112,9 @@ pub const fn ilog10_mul_or(x: u32) -> u32 {
 }
 
 
+// hacker's delight version borrowing optimizations 
+// from the rust forum discussion.
 pub const fn ilog10_mul(x: u32) -> u32 {
-    // hacker's delight version
     let guess = x.ilog2().wrapping_mul(9) >> 5;
     debug_assert!(guess < 10);
     if guess >= 10 {
@@ -114,16 +124,13 @@ pub const fn ilog10_mul(x: u32) -> u32 {
     guess + (x > ttg) as u32
 }
 
+// hacker's delight borrowing optimization idea from scottmcm@rustforum
+// to ensure the table access is unchecked. Seems to save a bounds check
+// standalone but that may get optimized away when used with ilog10_checked.
 pub fn ilog10_mul_alt(x: u32) -> u32 {
     let guess = (x.ilog2() * 9) >> 5;
     let ttg = unsafe { *TEN_THRESHOLDS.get_unchecked(guess as usize) };
     guess + (x > ttg) as u32
-}
-
-const fn ilog10(val: u32) -> u32 {
-    let guess = ilogpopc(val.leading_zeros());
-    let ttg = TEN_THRESHOLDS[guess as usize];
-    guess + (val > ttg) as u32
 }
 
 fn runloop<F>(f: &F) -> u128
