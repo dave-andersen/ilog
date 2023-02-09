@@ -62,6 +62,20 @@ pub const fn ilog10_u32(mut val: u32) -> u32 {
 }
 
 /// dga version with speedup from @sahnehaeubchen
+
+const TEN_THRESHOLDS: [u32; 10] = [
+9,
+99,
+999,
+9999,
+99999,
+999999,
+9999999,
+99999999,
+999_999_999,
+u32::MAX,
+];
+
 #[inline]
 const fn ilogpopc(val_lz: u32) -> u32 {
     const LZ_GUESSMASK: u32 = 0b01001001000100100100010010010000;
@@ -84,21 +98,10 @@ pub const fn ilog10_mul_or(x: u32) -> u32 {
     if guess >= 10 {
         unsafe { std::hint::unreachable_unchecked() }
     }
-    const TEN_THRESHOLDS: [u32; 10] = [
-        9,
-        99,
-        999,
-        9999,
-        99999,
-        999999,
-        9999999,
-        99999999,
-        999_999_999,
-        u32::MAX,
-    ];
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (x > ttg) as u32
 }
+
 
 pub const fn ilog10_mul(x: u32) -> u32 {
     // hacker's delight version
@@ -107,36 +110,12 @@ pub const fn ilog10_mul(x: u32) -> u32 {
     if guess >= 10 {
         unsafe { std::hint::unreachable_unchecked() }
     }
-    const TEN_THRESHOLDS: [u32; 10] = [
-        9,
-        99,
-        999,
-        9999,
-        99999,
-        999999,
-        9999999,
-        99999999,
-        999_999_999,
-        u32::MAX,
-    ];
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (x > ttg) as u32
 }
 
 pub fn ilog10_mul_alt(x: u32) -> u32 {
     let guess = (x.ilog2() * 9) >> 5;
-    const TEN_THRESHOLDS: [u32; 10] = [
-        9,
-        99,
-        999,
-        9999,
-        99999,
-        999999,
-        9999999,
-        99999999,
-        999_999_999,
-        u32::MAX,
-    ];
     let ttg = unsafe { *TEN_THRESHOLDS.get_unchecked(guess as usize) };
     guess + (x > ttg) as u32
 }
