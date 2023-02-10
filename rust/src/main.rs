@@ -89,6 +89,10 @@ const fn ilogpopc(val_lz: u32) -> u32 {
 }
 
 const fn ilog10(val: u32) -> u32 {
+    if val == 0 {
+        // SAFETY: This is ensured by our caller
+        unsafe { std::hint::unreachable_unchecked(); }
+    }
     let guess = ilogpopc(val.leading_zeros());
     let ttg = TEN_THRESHOLDS[guess as usize];
     guess + (val > ttg) as u32
