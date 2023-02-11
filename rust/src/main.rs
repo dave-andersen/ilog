@@ -31,7 +31,7 @@ fn test_ilog() {
     let start = std::time::Instant::now();
     (1..=u32::MAX)
         .into_par_iter()
-        .for_each(|x| assert_eq!(ilog10_mul(x), x.ilog10()));
+        .for_each(|x| assert_eq!(ilog10(x), x.ilog10()));
     let elapsed = start.elapsed();
     println!(
         "passed exhaustive u32 test in {:.2} seconds",
@@ -128,7 +128,7 @@ pub const fn ilog10_u32(mut val: u32) -> u32 {
 
 /// dga version with speedup from @sahnehaeubchen
 
-const TEN_THRESHOLDS: [u32; 10] = [
+const TEN_THRESHOLDS: [u32; 9] = [
     9,
     99,
     999,
@@ -138,9 +138,6 @@ const TEN_THRESHOLDS: [u32; 10] = [
     9999999,
     99999999,
     999_999_999,
-    // NOTE: This is only needed for the popcount version.
-    // Remove for production.
-    u32::MAX,
 ];
 
 // The following functions mostly combine two parts:
@@ -157,8 +154,11 @@ const TEN_THRESHOLDS: [u32; 10] = [
 
 // dave's popcount version that only works really well on AMD EPYC. :)
 #[inline]
-const fn ilogpopc(val_lz: u32) -> u32 {
-    const LZ_GUESSMASK: u32 = 0b01001001000100100100010010010000;
+const fn ilogpopc(val_lz: u32) -> u32 {    
+    // const LZ_GUESSMASK: u32 = 0b01001001000100100100010010010000;
+    // Here's a cute optimization: Leave out the upper '1'. Our
+    // guess will be too low but we still compare vs 1B.
+    const LZ_GUESSMASK: u32 = 0b00001001000100100100010010010000;
     let guess = (LZ_GUESSMASK << val_lz).count_ones();
     if guess > LZ_GUESSMASK.count_ones() {
         // SAFETY: shifting never increases the count of ones
