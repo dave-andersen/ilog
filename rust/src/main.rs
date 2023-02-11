@@ -157,7 +157,8 @@ const TEN_THRESHOLDS: [u32; 9] = [
 const fn ilogpopc(val_lz: u32) -> u32 {    
     // const LZ_GUESSMASK: u32 = 0b01001001000100100100010010010000;
     // Here's a cute optimization: Leave out the upper '1'. Our
-    // guess will be too low but we still compare vs 1B.
+    // guess will be too low but we still compare vs 1B. So we can
+    // omit the u32::MAX at the end of the comparison table, saving 4 bytes.
     const LZ_GUESSMASK: u32 = 0b00001001000100100100010010010000;
     let guess = (LZ_GUESSMASK << val_lz).count_ones();
     if guess > LZ_GUESSMASK.count_ones() {
