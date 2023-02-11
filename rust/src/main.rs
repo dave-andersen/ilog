@@ -138,6 +138,8 @@ const TEN_THRESHOLDS: [u32; 10] = [
     9999999,
     99999999,
     999_999_999,
+    // NOTE: This is only needed for the popcount version.
+    // Remove for production.
     u32::MAX,
 ];
 
@@ -197,8 +199,8 @@ pub const fn ilog10_mul_or(x: u32) -> u32 {
 // from the rust forum discussion.
 pub const fn ilog10_mul(x: u32) -> u32 {
     let guess = x.ilog2().wrapping_mul(9) >> 5;
-    debug_assert!(guess < 10);
-    if guess >= 10 {
+    debug_assert!(guess < 9);
+    if guess >= 9 {
         unsafe { std::hint::unreachable_unchecked() }
     }
     let ttg = TEN_THRESHOLDS[guess as usize];
