@@ -180,22 +180,6 @@ const fn ilog10(val: u32) -> u32 {
     guess + (val > ttg) as u32
 }
 
-// version from quaternic on the rust forum
-pub const fn ilog10_mul_or(x: u32) -> u32 {
-    // set least significant 3 bits so numbers 0 to 6 all get the same treatment 7
-    // changes nothing if x >= 7
-    let log2 = ((x | 7) >> 1).ilog2();
-    debug_assert!(log2 < 31);
-    // guess close enough for all u32
-    let guess = log2.wrapping_mul(5) >> 4;
-    debug_assert!(guess < 10);
-    if guess >= 10 {
-        unsafe { std::hint::unreachable_unchecked() }
-    }
-    let ttg = TEN_THRESHOLDS[guess as usize];
-    guess + (x > ttg) as u32
-}
-
 // hacker's delight version borrowing optimizations
 // from the rust forum discussion.
 pub const fn ilog10_mul(x: u32) -> u32 {
